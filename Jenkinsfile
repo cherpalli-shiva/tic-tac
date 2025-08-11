@@ -30,16 +30,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    // Assuming SonarQube is set up and configured
-                    withSonarQubeEnv('Sonar-scanner') {
-                        sh 'sonar-scanner -Dsonar.projectKey=tic-tac-toe -Dsonar.sources=src'
-                    }
-                }
-            }
-        }
+    
         stage('Push Docker Image') {
             steps {
                 script {
