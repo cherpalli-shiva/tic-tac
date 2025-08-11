@@ -1,11 +1,11 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE = 'tic-tac-toe:latest'
+        DOCKER_IMAGE = 'tic-tac-toe'
         REGISTRY_CREDENTIALS = 'dockerhub-credentials'
-        GIT_CREDENTIALS = 'git-credentials-id'
-        GIT_REPO = 'https://gith'
-        K8s_MANIFEST_PATH = 'k8s/deployment.yaml'
+        GIT_CREDENTIALS = 'cherpalli-shiva'
+        GIT_REPO = 'https://github.com/cherpalli-shiva/tic-tac.git'
+        K8S_MANIFEST_PATH = 'k8s/deployment.yaml'
     }
 
     stages {
@@ -21,11 +21,32 @@ pipeline {
                 }
             }
         }
+        stage('Run Tests') {
+            steps {
+                script {
+                    // Assuming tests are run using npm
+                    sh 'npm install'
+                    sh 'npm test'
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    // Assuming SonarQube is set up and configured
+                    withSonarQubeEnv('Sonar-server') {
+                        sh 'npm install'
+                        sh 'sonar-scanner -Dsonar.projectKey=tic-tac-toe -Dsonar.sources=src'
+                    }
+                }
+            }
+        }
         stage('Push Docker Image') {
             steps {
                 script {
                     docker.withRegistry('',"${REGISTRY_CREDENTIALS}") {
                         dockerImage.push()
+                        dockerImage.push('latest')
                     }
                 }
             }
@@ -35,7 +56,7 @@ pipeline {
                 script {
                     // Update the image in the k8s manifest
                     sh """
-                    sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' ${K8s_MANIFEST_PATH}
+                    sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' ${K8S_MANIFEST_PATH}
                     """
                 }
             }
@@ -44,9 +65,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                    git config user.email ""
+                    git config user.email "cherpallishiva123@gmail.com"
                     git config user.name "Jenkins CI"
-                    git add ${K8s_MANIFEST_PATH}
+                    git add ${K8S_MANIFEST_PATH}
                     git commit -m "Update k8s manifest with new image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
                     git push origin main
                     """
