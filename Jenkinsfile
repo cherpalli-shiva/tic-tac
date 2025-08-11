@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: env.GIT_CREDENTIALS, url: env.GIT_REPO
+                git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/cherpalli-shiva/tic-tac.git'
             }
         }
         stage('Build Docker Image') {
