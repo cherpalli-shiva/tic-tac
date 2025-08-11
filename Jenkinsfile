@@ -1,70 +1,65 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_IMAGE = 'tic-tac-toe'
-        REGISTRY_CREDENTIALS = 'dockerhub-credentials'
-        GIT_CREDENTIALS = 'github-credentials'
-        GIT_REPO = 'https://github.com/cherpalli-shiva/tic-tac.git'
-        K8S_MANIFEST_PATH = 'k8s/deployment.yaml'
+
+    triggers {
+        pollSCM('H/1 * * * *')  // Poll GitHub every minute; replace with webhook for better performance
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Change URL and credentials as needed
                 git branch: 'main', credentialsId: 'github-credentials', url: 'https://github.com/cherpalli-shiva/tic-tac.git'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                    def taggedImage = dockerImage.tag("cherpalli/${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    // Hardcoded Docker image name with build number tag
+                    dockerImage = docker.build("cherpalli/tic-tac-toe:${env.BUILD_NUMBER}")
                 }
             }
         }
-        stage('Run Tests') {
-            steps {
-                script {
-                    // Assuming tests are run using npm
-                    sh 'npm install'
-                    sh 'npm test'
-                }
-            }
-        }
-    
+
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('',"${REGISTRY_CREDENTIALS}") {
-                        taggedImage.push()
-                        taggedImage.push('latest')
-
+                    docker.withRegistry('', 'dockerhub-credentials') {
+                        dockerImage.push()
+                        dockerImage.push('latest')
                     }
                 }
             }
         }
-        stage('Update k8s manifest') {
+
+        stage('Update Kubernetes Manifest') {
             steps {
                 script {
-                    // Update the image in the k8s manifest
+                    // Hardcoded manifest file path and sed command to update image tag
                     sh """
-                    sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' ${K8S_MANIFEST_PATH}
+                    sed -i 's|image: .*|image: cherpalli/tic-tac-toe:${BUILD_NUMBER}|' k8s/deployment.yaml
                     """
                 }
             }
         }
-        stage('Commit and Push k8s Manifest') {
+
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh """
-                    git config user.email "cherpallishiva123@gmail.com"
-                    git config user.name "Jenkins CI"
-                    git add ${K8S_MANIFEST_PATH}
-                    git commit -m "Update k8s manifest with new image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    git push origin main
-                    """
+                    // Apply the updated k8s manifest
+                    sh "kubectl apply -f k8s/deployment.yaml"
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
