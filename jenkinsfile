@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+    environment {
+        DOCKER_IMAGE = 'tic-tac-toe:latest'
+        REGISTRY_CREDENTIALS = 'dockerhub-credentials'
+        GIT_CREDENTIALS = 'git-credentials-id'
+        GIT_REPO = 'https://gith'
+        K8s_MANIFEST_PATH = 'k8s/deployment.yaml'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: env.GIT_CREDENTIALS, url: env.GIT_REPO
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('',"${REGISTRY_CREDENTIALS}") {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Update k8s manifest') {
+            steps {
+                script {
+                    // Update the image in the k8s manifest
+                    sh """
+                    sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' ${K8s_MANIFEST_PATH}
+                    """
+                }
+            }
+        }
+        stage('Commit and Push k8s Manifest') {
+            steps {
+                script {
+                    sh """
+                    git config user.email ""
+                    git config user.name "Jenkins CI"
+                    git add ${K8s_MANIFEST_PATH}
+                    git commit -m "Update k8s manifest with new image ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    git push origin main
+                    """
+                }
+            }
+        }
+    }
+}
