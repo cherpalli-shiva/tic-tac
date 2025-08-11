@@ -18,6 +18,7 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    def taggedImage = dockerImage.tag("cherpalli/${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -35,8 +36,9 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('',"${REGISTRY_CREDENTIALS}") {
-                        dockerImage.push()
-                        dockerImage.push('latest')
+                        taggedImage.push()
+                        taggedImage.push('latest')
+
                     }
                 }
             }
