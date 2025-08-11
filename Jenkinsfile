@@ -36,7 +36,7 @@ pipeline {
                     // Assuming SonarQube is set up and configured
                     withSonarQubeEnv('Sonar-server') {
                         sh 'npm install'
-                        sh 'sonar-server -Dsonar.projectKey=tic-tac-toe -Dsonar.sources=src'
+                        sh 'sonar-scanner -Dsonar.projectKey=tic-tac-toe -Dsonar.sources=src'
                     }
                 }
             }
