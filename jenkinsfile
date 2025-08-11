@@ -3,7 +3,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'tic-tac-toe'
         REGISTRY_CREDENTIALS = 'dockerhub-credentials'
-        GIT_CREDENTIALS = 'cherpalli-shiva'
+        GIT_CREDENTIALS = 'github-credentials'
         GIT_REPO = 'https://github.com/cherpalli-shiva/tic-tac.git'
         K8S_MANIFEST_PATH = 'k8s/deployment.yaml'
     }
