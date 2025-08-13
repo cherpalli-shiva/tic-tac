@@ -1,32 +1,17 @@
-# Stage 1: Build the app
-FROM node:18-alpine AS builder
-
-# Set working directory inside container
+# Dockerfile
+# ---- build stage ----
+FROM node:20-alpine AS build
 WORKDIR /app
-
-# Copy package.json and package-lock.json first (for caching)
-COPY package.json package-lock.json ./
-
-# Install dependencies
+COPY package*.json ./
 RUN npm ci
-
-# Copy the rest of the source code
 COPY . .
-
-# Build the project (output usually goes to /app/dist)
 RUN npm run build
 
-# Stage 2: Serve the built app with nginx
-FROM nginx:stable-alpine
-
-# Copy built files from builder stage to nginx html folder
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy custom nginx config if needed (optional)
-# COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose port 80
+# ---- runtime stage ----
+FROM nginx:1.27-alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+# minimal hardening
+RUN rm -rf /etc/nginx/conf.d/* \
+ && printf 'server { listen 80; root /usr/share/nginx/html; index index.html; \
+ try_files $uri /index.html; }' > /etc/nginx/conf.d/default.conf
 EXPOSE 80
-
-# Start nginx (default command)
-CMD ["nginx", "-g", "daemon off;"]
