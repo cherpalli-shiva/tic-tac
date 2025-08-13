@@ -21,12 +21,11 @@ pipeline {
       steps {
         sh '''
           mkdir -p /tmp/.npm
-          npm config set cache /tmp/.npm
-          npm ci
+          NPM_CONFIG_CACHE=/tmp/.npm npm ci
         '''
       }
     }
-    
+
     stage('Lint') {
       steps {
         sh 'npm run lint'
