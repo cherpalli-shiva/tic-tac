@@ -19,10 +19,14 @@ pipeline {
     }
 
     stage('Install') {
-      steps {
-        sh 'npm ci'
-      }
-    }
+  steps {
+    sh '''
+      mkdir -p /home/jenkins/.npm
+      npm config set cache /home/jenkins/.npm
+      npm ci
+    '''
+  }
+}
 
     stage('Lint') {
       steps {
