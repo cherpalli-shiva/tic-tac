@@ -17,17 +17,16 @@ pipeline {
         checkout scm
       }
     }
-
     stage('Install') {
-  steps {
-    sh '''
-      mkdir -p /home/jenkins/.npm
-      npm config set cache /home/jenkins/.npm
-      npm ci
-    '''
-  }
-}
-
+      steps {
+        sh '''
+          mkdir -p /tmp/.npm
+          npm config set cache /tmp/.npm
+          npm ci
+        '''
+      }
+    }
+    
     stage('Lint') {
       steps {
         sh 'npm run lint'
