@@ -5,7 +5,7 @@ metadata:
   labels:
     app: tic-tac-toe
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: tic-tac-toe
   ports:
