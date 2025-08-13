@@ -13,10 +13,10 @@ pipeline {
 
     stage('Checkout') {
       steps {
-        // pulls the source code from Git
         checkout scm
       }
     }
+
     stage('Install') {
       steps {
         sh '''
@@ -43,12 +43,12 @@ pipeline {
         sh 'npm run build'
       }
     }
+  }
 
-    post {
+  post {
     success {
       // Trigger next job to build + push Docker image
       build job: 'docker-build-push-tic-tac', wait: true
-      }
     }
   }
 }
