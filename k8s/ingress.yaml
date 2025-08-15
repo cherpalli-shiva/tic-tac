@@ -4,23 +4,27 @@ metadata:
   name: tic-tac-toe-ingress
   namespace: default
   annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:701411677425:certificate/57f45359-317c-419c-af27-c5a9ced59694
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/group.name: tic-tac
+    kubernetes.io/ingress.class: alb
 spec:
-  ingressClassName: nginx
-  tls:
-  - hosts:
-      - digicashpro.com
-    secretName: tic-tac-toe-tls
   rules:
-  - host: digicashpro.com
-    http:
-      paths: 
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: tic-tac-toe-service
-              port:
-                number: 80
+    - host: digicashpro.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tic-tac-toe-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - digicashpro.com
+      secretName: dummy-placeholder # Required but not used by ALB
