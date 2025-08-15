@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: tic-tac-toe
-        image: cherpalli/vite-react-app:5
+        image: cherpalli/vite-react-app:13
         ports:
         - containerPort: 80
         
